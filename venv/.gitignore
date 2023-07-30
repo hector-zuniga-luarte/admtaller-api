@@ -1,7 +1,11 @@
 
+# Archivos temporales
 __pycache__
 
+# Archivos del entorno local 
 Include
 Lib
 Scripts
+
+# Archivo de configuración del entorno virtual
 pyvenv.cfg
