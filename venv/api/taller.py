@@ -280,7 +280,11 @@ async def taller_producto_lista(id_taller: int):
             cp.nom_categ_producto as nom_categ_producto, \
             a.nom_agrupador as nom_agrupador, \
             p.precio as precio, \
-            round(p.precio * ct.cantidad, 0) as total \
+            round(p.precio * ct.cantidad, 0) as total, \
+            case \
+				when ct.cod_agrupador = 1 then cp.cod_categ_producto \
+                else 0 \
+			end as orden \
         from config_taller ct \
         join producto p on ct.id_producto = p.id_producto \
         join categ_producto cp on cp.cod_categ_producto = p.cod_categ_producto \
@@ -288,7 +292,7 @@ async def taller_producto_lista(id_taller: int):
         join unidad_medida um on um.cod_unidad_medida = p.cod_unidad_medida \
         where ct.id_taller = %s \
         order by ct.cod_agrupador asc, \
-            cp.cod_categ_producto asc, \
+            orden asc, \
             p.nom_producto asc"
 
     db = await get_db_connection()
