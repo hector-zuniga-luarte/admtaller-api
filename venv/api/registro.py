@@ -43,9 +43,9 @@ async def registro_asignaturas(ano_academ: int, id_usuario: int):
             join periodo_academ peracadem on pa.cod_periodo_academ = peracadem.cod_periodo_academ \
             where pa.ano_academ = %s and \
                 pt.id_usuario = %s \
-            order by peracadem.cod_periodo_academ asc, \
-                a.sigla asc, \
-                pa.seccion asc"
+            order by cod_periodo_academ asc, \
+                sigla asc, \
+                seccion asc"
 
         db = await get_db_connection()
         if db is None:
@@ -88,9 +88,9 @@ async def registro_asignaturas(ano_academ: int, id_usuario: int):
             join periodo_academ peracadem on pa.cod_periodo_academ = peracadem.cod_periodo_academ \
             where pa.ano_academ = %s and \
                 u.id_usuario = %s \
-            order by peracadem.cod_periodo_academ asc, \
-                a.sigla asc, \
-                pa.seccion asc"
+            order by cod_periodo_academ asc, \
+                sigla asc, \
+                seccion asc"
 
         db = await get_db_connection()
         if db is None:
@@ -132,9 +132,9 @@ async def registro_asignaturas(ano_academ: int, id_usuario: int):
             join carrera c on a.cod_carrera = c.cod_carrera \
             join periodo_academ peracadem on pa.cod_periodo_academ = peracadem.cod_periodo_academ \
             where pa.ano_academ = %s \
-            order by peracadem.cod_periodo_academ asc, \
-                a.sigla asc, \
-                pa.seccion asc"
+            order by cod_periodo_academ asc, \
+                sigla asc, \
+                seccion asc"
 
         db = await get_db_connection()
         if db is None:

@@ -39,7 +39,7 @@ async def consulta_valorizacion_taller(id_usuario: int):
                 a.sigla as sigla, \
                 a.nom_asign as nom_asign, \
                 t.semana as semana, \
-                t.id_taller as id_taller, \
+                min(t.id_taller) as id_taller, \
                 t.titulo_preparacion as titulo_preparacion, \
                 sum(round(p.precio * ct.cantidad, 0)) as total_taller \
             from asign a \
@@ -84,7 +84,7 @@ async def consulta_valorizacion_taller(id_usuario: int):
                 a.sigla as sigla, \
                 a.nom_asign as nom_asign, \
                 t.semana as semana, \
-                t.id_taller as id_taller, \
+                min(t.id_taller) as id_taller, \
                 t.titulo_preparacion as titulo_preparacion, \
                 sum(round(p.precio * ct.cantidad, 0)) as total_taller \
             from asign a \
@@ -289,7 +289,7 @@ async def consulta_asignacion_registro_docentes(ano_academ: int, id_usuario: int
                     else '-' \
                     end) as nom_asign, \
                 pt.seccion as seccion, \
-                pt.cod_periodo_academ as cod_periodo_academ, \
+                min(pt.cod_periodo_academ) as cod_periodo_academ, \
                 (case \
                     when pt.sigla is not null then pa.nom_periodo_academ \
                     else '-' \
@@ -316,10 +316,10 @@ async def consulta_asignacion_registro_docentes(ano_academ: int, id_usuario: int
                 a.nom_asign, \
                 pt.seccion, \
                 pa.nom_periodo_academ \
-            order by c.cod_carrera asc, \
+            order by c.nom_carrera asc, \
                 orden_asignacion asc, \
                 pt.sigla asc, \
-                pa.cod_periodo_academ asc, \
+                cod_periodo_academ asc, \
                 u.primer_apellido asc, \
                 u.segundo_apellido asc, \
                 u.nom_preferido asc"
@@ -362,7 +362,7 @@ async def consulta_asignacion_registro_docentes(ano_academ: int, id_usuario: int
                     else '-' \
                     end) as nom_asign, \
                 pt.seccion as seccion, \
-                pt.cod_periodo_academ as cod_periodo_academ, \
+                min(pt.cod_periodo_academ) as cod_periodo_academ, \
                 (case \
                     when pt.sigla is not null then pa.nom_periodo_academ \
                     else '-' \
@@ -390,10 +390,10 @@ async def consulta_asignacion_registro_docentes(ano_academ: int, id_usuario: int
                 a.nom_asign, \
                 pt.seccion, \
                 pa.nom_periodo_academ \
-            order by c.cod_carrera asc, \
+            order by c.nom_carrera asc, \
                 orden_asignacion asc, \
                 pt.sigla asc, \
-                pa.cod_periodo_academ asc, \
+                nom_periodo_academ asc, \
                 u.primer_apellido asc, \
                 u.segundo_apellido asc, \
                 u.nom_preferido asc"
