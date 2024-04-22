@@ -36,7 +36,6 @@ async def asignatura_lista(id_usuario: int):
 				round(sum(round(ct.cantidad * p.precio, 0)), 0) as costo_total \
             from asign a \
             join carrera c on a.cod_carrera = c.cod_carrera \
-            join usuario u on c.cod_carrera = u.cod_carrera \
             join taller t on a.sigla = t.sigla \
             join config_taller ct on t.id_taller = ct.id_taller \
             join producto p on ct.id_producto = p.id_producto \
@@ -188,11 +187,6 @@ async def asignatura_eliminar(sigla: str, id_usuario: int):
 
     finally:
         db.close()
-
-    return {
-        "sigla": sigla,
-        "eliminado": True
-    }
 
 
 @router.get("/api/asignatura/{sigla}/{id_usuario}", response_model=Asignatura, summary="Recupera una asignatura en base a su sigla", tags=["Asignaturas"])
