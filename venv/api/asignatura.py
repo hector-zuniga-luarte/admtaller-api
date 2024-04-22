@@ -26,53 +26,25 @@ async def asignatura_lista(id_usuario: int):
 
     # Dependiendo del perfil, filtramos por carrera o no
     query: str = None
-    if perfil.cod_perfil in (Const.K_ADMINISTRADOR_CARRERA.value, Const.K_DOCENTE.value):
-        query = " \
-            select a.sigla as sigla, \
-                a.nom_asign as nom_asign, \
-                a.nom_asign_abrev as nom_asign_abrev, \
-                a.cod_carrera as cod_carrera, \
-                c.nom_carrera as nom_carrera \
-            from asign a \
-            join carrera c on a.cod_carrera = c.cod_carrera \
-            where a.cod_carrera = (select us.cod_carrera \
-                                from usuario us \
-                                where us.id_usuario = %s) \
-            order by c.cod_carrera asc, \
-                a.sigla"
-
-        db = await get_db_connection()
-        if db is None:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error al conectar a la base de datos")
-
-        try:
-            values = (id_usuario)
-            async with db.cursor() as cursor:
-                await cursor.execute(query, values)
-                result = await cursor.fetchall()
-
-        except aiomysql.Error as e:
-            error_message = str(e)
-            if "Connection" in error_message:
-                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error al conectar a la base de datos")
-            else:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error en la consulta a la base de datos. DBerror {error_message}")
-
-        except Exception:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error en la base de datos")
-
-        finally:
-            db.close()
-
     if perfil.cod_perfil == Const.K_ADMINISTRADOR_TI.value:
         query = " \
             select a.sigla as sigla, \
                 a.nom_asign as nom_asign, \
                 a.nom_asign_abrev as nom_asign_abrev, \
                 a.cod_carrera as cod_carrera, \
-                c.nom_carrera as nom_carrera \
+                c.nom_carrera as nom_carrera, \
+				round(sum(round(ct.cantidad * p.precio, 0)), 0) as costo_total \
             from asign a \
             join carrera c on a.cod_carrera = c.cod_carrera \
+            join usuario u on c.cod_carrera = u.cod_carrera \
+            join taller t on a.sigla = t.sigla \
+            join config_taller ct on t.id_taller = ct.id_taller \
+            join producto p on ct.id_producto = p.id_producto \
+            group by a.sigla, \
+                a.nom_asign, \
+                a.nom_asign_abrev, \
+                a.cod_carrera, \
+                c.nom_carrera \
             order by c.cod_carrera asc, \
                 a.sigla"
 
@@ -100,6 +72,53 @@ async def asignatura_lista(id_usuario: int):
         finally:
             db.close()
 
+    if perfil.cod_perfil in (Const.K_ADMINISTRADOR_CARRERA.value, Const.K_DOCENTE.value):
+        query = " \
+            select a.sigla as sigla, \
+                a.nom_asign as nom_asign, \
+                a.nom_asign_abrev as nom_asign_abrev, \
+                a.cod_carrera as cod_carrera, \
+                c.nom_carrera as nom_carrera, \
+				round(sum(round(ct.cantidad * p.precio, 0)), 0) as costo_total \
+            from asign a \
+            join carrera c on a.cod_carrera = c.cod_carrera \
+            join usuario u on c.cod_carrera = u.cod_carrera \
+            join taller t on a.sigla = t.sigla \
+            join config_taller ct on t.id_taller = ct.id_taller \
+            join producto p on ct.id_producto = p.id_producto \
+            where u.id_usuario =  %s \
+            group by a.sigla, \
+                a.nom_asign, \
+                a.nom_asign_abrev, \
+                a.cod_carrera, \
+                c.nom_carrera \
+            order by c.cod_carrera asc, \
+                a.sigla"
+
+        db = await get_db_connection()
+        if db is None:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error al conectar a la base de datos")
+
+        try:
+            values = (id_usuario)
+            async with db.cursor() as cursor:
+                await cursor.execute(query, values)
+                result = await cursor.fetchall()
+
+        except aiomysql.Error as e:
+            error_message = str(e)
+            if "Connection" in error_message:
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error al conectar a la base de datos")
+            else:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error en la consulta a la base de datos. DBerror {error_message}")
+
+        except Exception:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error en la base de datos")
+
+        finally:
+            db.close()
+
+
     # Armamos el diccionario de salida
     asignatura: Asignatura = None
     for row in result:
@@ -107,7 +126,8 @@ async def asignatura_lista(id_usuario: int):
                                 nom_asignatura=row[1],
                                 nom_asignatura_abrev=row[2],
                                 cod_carrera=row[3],
-                                nom_carrera=row[4])
+                                nom_carrera=row[4],
+                                costo_total=row[5],)
         asignaturas.append(asignatura)
 
     return asignaturas
@@ -183,6 +203,7 @@ async def usuario_get(sigla: str, id_usuario: int):
             "nom_asignatura_abrev": "",
             "cod_carrera": 0,
             "nom_carrera": "",
+            "costo_total": 0,
         }
 
     # Si id_usuario_get = 0 se asume que es un usuario nuevo
@@ -205,10 +226,19 @@ async def usuario_get(sigla: str, id_usuario: int):
                 a.nom_asign as nom_asign, \
                 a.nom_asign_abrev as nom_asign_abrev, \
                 a.cod_carrera as cod_carrera, \
-                c.nom_carrera as nom_carrera \
+                c.nom_carrera as nom_carrera, \
+				round(sum(round(ct.cantidad * p.precio, 0)), 0) as costo_total \
             from asign a \
             join carrera c on a.cod_carrera = c.cod_carrera \
-            where sigla = %s"
+            join taller t on a.sigla = t.sigla \
+			join config_taller ct on t.id_taller = ct.id_taller \
+			join producto p on ct.id_producto = p.id_producto \
+            where a.sigla = %s \
+            group by a.sigla, \
+                a.nom_asign, \
+                a.nom_asign_abrev, \
+                a.cod_carrera, \
+                c.nom_carrera"
 
         values = (sigla)
         async with db.cursor() as cursor:
@@ -221,7 +251,8 @@ async def usuario_get(sigla: str, id_usuario: int):
                                     nom_asignatura=result[1],
                                     nom_asignatura_abrev=result[2],
                                     cod_carrera=result[3],
-                                    nom_carrera=result[4],)
+                                    nom_carrera=result[4],
+                                    costo_total=result[5],)
             return asignatura
 
     except aiomysql.Error as e:

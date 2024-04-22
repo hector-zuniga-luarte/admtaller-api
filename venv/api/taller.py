@@ -21,10 +21,20 @@ async def taller_lista(sigla: str):
         select t.id_taller as id_taller, \
             t.titulo_preparacion as titulo_preparacion, \
             t.detalle_preparacion as detalle_preparacion, \
-            t.semana, \
-            t.sigla \
+            t.semana as semana, \
+            t.sigla as sigla, \
+            a.nom_asign as nom_asign, \
+            round(sum(round(ct.cantidad * p.precio, 0)), 0) as costo_total \
         from taller t \
+        join asign a on t.sigla = a.sigla \
+        join config_taller ct on t.id_taller = ct.id_taller \
+        join producto p on ct.id_producto = p.id_producto \
         where t.sigla = %s \
+        group by id_taller, \
+            titulo_preparacion, \
+            detalle_preparacion, \
+            semana, \
+            sigla \
         order by t.semana asc"
     db = await get_db_connection()
     if db is None:
@@ -57,7 +67,9 @@ async def taller_lista(sigla: str):
                         titulo_preparacion=row[1],
                         detalle_preparacion=row[2],
                         semana=row[3],
-                        sigla=row[4])
+                        sigla=row[4],
+                        nom_asign = row[5],
+                        costo_total=row[6],)
         talleres.append(taller)
 
     return talleres
@@ -105,11 +117,6 @@ async def asignatura_eliminar(id_taller: int):
     finally:
         db.close()
 
-    return {
-        "id_taller": id_taller,
-        "eliminado": True
-    }
-
 
 @router.get("/api/taller/{id_taller}/{id_usuario}", response_model=Taller, summary="Recupera un taller en base a su ID", tags=["Talleres"])
 async def taller_get(id_taller: int, id_usuario: int):
@@ -142,10 +149,19 @@ async def taller_get(id_taller: int, id_usuario: int):
                 t.detalle_preparacion as detalle_preparacion, \
                 t.semana as semana, \
                 t.sigla as sigla, \
-                a.nom_asign as nom_asign \
+                a.nom_asign as nom_asign, \
+				round(sum(round(ct.cantidad * p.precio, 0)), 0) as costo_total \
             from taller t \
             join asign a on t.sigla = a.sigla \
-            where t.id_taller = %s"
+			join config_taller ct on t.id_taller = ct.id_taller \
+			join producto p on ct.id_producto = p.id_producto \
+            where t.id_taller = %s \
+            group by t.id_taller, \
+                t.titulo_preparacion, \
+                t.detalle_preparacion, \
+                t.semana, \
+                t.sigla, \
+                a.nom_asign"
 
         values = (id_taller)
         async with db.cursor() as cursor:
@@ -159,7 +175,8 @@ async def taller_get(id_taller: int, id_usuario: int):
                             detalle_preparacion=result[2],
                             semana=result[3],
                             sigla=result[4],
-                            nom_asignatura=result[5])
+                            nom_asign=result[5],
+                            costo_total=result[6],)
             return taller
 
     except aiomysql.Error as e:

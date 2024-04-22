@@ -9,7 +9,10 @@ from api.perfil import perfil_usuario
 from models.consultas import RegistroConsultaValorizacionTaller
 from models.consultas import RegistroConsultaPresupuestoEstimadoAsignatura
 from models.consultas import RegistroConsultaAsignacionRegistroTalleresDocente
+from models.consultas import RegistroConsultaResumenProductoRangoFechas
+from models.consultas import RegistroDetalleProductoTallerRangoFechas
 from database import get_db_connection
+from datetime import date
 from infrastructure.constants import Const
 
 router = fastapi.APIRouter()
@@ -434,6 +437,292 @@ async def consulta_asignacion_registro_docentes(ano_academ: int, id_usuario: int
                                                                      nom_periodo_academ=row[8],
                                                                      total_taller_asignado=row[9],
                                                                      total_taller_registrado=row[10],)
+        registros.append(registro)
+
+    return registros
+
+
+@router.get("/api/consulta/4/ano_academ/{ano_academ}/fecha_inicio/{fecha_inicio}/fecha_termino/{fecha_termino}/{id_usuario}", response_model=List[RegistroConsultaResumenProductoRangoFechas], summary="Resumen de productos por rango de fechas", tags=["Consultas"])
+async def consulta_resumen_producto_periodo(ano_academ: int, fecha_inicio: date, fecha_termino: date, id_usuario: int):
+    registro: RegistroConsultaResumenProductoRangoFechas = None
+    registros: List[RegistroConsultaResumenProductoRangoFechas] = []
+
+    # Determinamos el perfil del usuario para determinar qué información puede ver
+    perfil = await perfil_usuario(id_usuario)
+    # Si todo está correcto, Retornamos la respuesta de la API
+    if not perfil:
+        return registros
+    # Perfil docente no debe tener acceso a listados
+    if perfil.cod_perfil == Const.K_DOCENTE.value:
+        return registros
+
+    if perfil.cod_perfil == Const.K_ADMINISTRADOR_TI.value:
+        query = " \
+            select c.nom_carrera as nom_carrera, \
+                cp.nom_categ_producto as nom_categ_producto, \
+                p.nom_producto as nom_producto, \
+                sum(ct.cantidad) as cantidad_total_productos, \
+                um.nom_unidad_medida as nom_unidad_medida, \
+                p.precio as precio_producto, \
+                round(sum(ct.cantidad) * p.precio, 0) as precio_total_productos \
+            from prog_taller pt \
+            join config_taller ct on pt.id_taller = ct.id_taller \
+            join producto p on ct.id_producto = p.id_producto \
+            join unidad_medida um on p.cod_unidad_medida = um.cod_unidad_medida \
+            join categ_producto cp on p.cod_categ_producto = cp.cod_categ_producto \
+            join asign a on pt.sigla = a.sigla \
+            join carrera c on a.cod_carrera = c.cod_carrera \
+            where pt.ano_academ = %s and \
+                pt.fecha between %s and %s \
+            group by c.nom_carrera,\
+                cp.nom_categ_producto, \
+                ct.id_producto, \
+                p.nom_producto, \
+                p.precio, \
+                um.nom_unidad_medida \
+            order by c.nom_carrera asc, \
+                cp.nom_categ_producto asc, \
+                p.nom_producto asc"
+        db = await get_db_connection()
+        if db is None:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error al conectar a la base de datos")
+
+        try:
+            values = (ano_academ, fecha_inicio, fecha_termino)
+            async with db.cursor() as cursor:
+                await cursor.execute(query, values)
+                result = await cursor.fetchall()
+
+        except aiomysql.Error as e:
+            error_message = str(e)
+            if "Connection" in error_message:
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error al conectar a la base de datos")
+            else:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error en la consulta a la base de datos. DBerror {error_message}")
+
+        except Exception as e:
+            error_message = str(e)
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error en la base de datos. DBError {error_message}")
+
+        finally:
+            db.close()
+
+    if perfil.cod_perfil == Const.K_ADMINISTRADOR_CARRERA.value:
+        query = " \
+            select c.nom_carrera as nom_carrera, \
+                cp.nom_categ_producto as nom_categ_producto, \
+                p.nom_producto as nom_producto, \
+                sum(ct.cantidad) as cantidad_total_productos, \
+                um.nom_unidad_medida as nom_unidad_medida, \
+                p.precio as precio_producto, \
+                round(sum(ct.cantidad) * p.precio, 0) as precio_total_productos \
+            from prog_taller pt \
+            join config_taller ct on pt.id_taller = ct.id_taller \
+            join producto p on ct.id_producto = p.id_producto \
+            join unidad_medida um on p.cod_unidad_medida = um.cod_unidad_medida \
+            join categ_producto cp on p.cod_categ_producto = cp.cod_categ_producto \
+            join asign a on pt.sigla = a.sigla \
+            join usuario u on a.cod_carrera = u.cod_carrera \
+            join carrera c on a.cod_carrera = c.cod_carrera \
+            where pt.ano_academ = %s and \
+                u.id_usuario = %s and \
+                pt.fecha between %s and %s \
+            group by c.nom_carrera, \
+                cp.nom_categ_producto, \
+                ct.id_producto, \
+                p.nom_producto, \
+                p.precio, \
+                um.nom_unidad_medida \
+            order by c.nom_carrera asc, \
+                cp.nom_categ_producto asc, \
+                p.nom_producto asc"
+        db = await get_db_connection()
+        if db is None:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error al conectar a la base de datos")
+
+        try:
+            values = (ano_academ, id_usuario, fecha_inicio, fecha_termino)
+            async with db.cursor() as cursor:
+                await cursor.execute(query, values)
+                result = await cursor.fetchall()
+
+        except aiomysql.Error as e:
+            error_message = str(e)
+            if "Connection" in error_message:
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error al conectar a la base de datos")
+            else:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error en la consulta a la base de datos. DBerror {error_message}")
+
+        except Exception as e:
+            error_message = str(e)
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error en la base de datos. DBError {error_message}")
+
+        finally:
+            db.close()
+
+    # Armamos el diccionario de salida
+    for row in result:
+        registro = RegistroConsultaResumenProductoRangoFechas(nom_carrera = row[0],
+                                                              nom_categ_producto = row[1],
+                                                              nom_producto = row[2],
+                                                              cantidad_total_productos = row[3],
+                                                              nom_unidad_medida = row[4],
+                                                              precio_producto = row[5],
+                                                              precio_total_productos = row[6],)
+        registros.append(registro)
+
+    return registros
+
+
+@router.get("/api/consulta/5/ano_academ/{ano_academ}/fecha_inicio/{fecha_inicio}/fecha_termino/{fecha_termino}/{id_usuario}", response_model=List[RegistroDetalleProductoTallerRangoFechas], summary="Detalle de productos por taller y por rango de fechas", tags=["Consultas"])
+async def consulta_detalle_producto_taller_periodo(ano_academ: int, fecha_inicio: date, fecha_termino: date, id_usuario: int):
+    registro: RegistroDetalleProductoTallerRangoFechas = None
+    registros: List[RegistroDetalleProductoTallerRangoFechas] = []
+
+    # Determinamos el perfil del usuario para determinar qué información puede ver
+    perfil = await perfil_usuario(id_usuario)
+    # Si todo está correcto, Retornamos la respuesta de la API
+    if not perfil:
+        return registros
+    # Perfil docente no debe tener acceso a listados
+    if perfil.cod_perfil == Const.K_DOCENTE.value:
+        return registros
+
+    if perfil.cod_perfil == Const.K_ADMINISTRADOR_TI.value:
+        query = " \
+            select c.nom_carrera, \
+                cp.nom_categ_producto as nom_categ_producto, \
+                p.nom_producto as nom_producto, \
+                ct.cantidad as cantidad, \
+                um.nom_unidad_medida as nom_unidad_medida, \
+                p.precio as precio, \
+                (ct.cantidad * p.precio) as precio_total, \
+                pt.fecha as fecha, \
+                pa.nom_periodo_academ as nom_periodo_academ, \
+                pt.sigla as sigla, \
+                a.nom_asign as nom_asign, \
+                pt.seccion as seccion, \
+                t.semana as semana, \
+                t.titulo_preparacion as titulo_preparacion \
+            from prog_taller pt \
+            join asign a on pt.sigla = a.sigla \
+            join config_taller ct on pt.id_taller = ct.id_taller \
+            join taller t on pt.id_taller = t.id_taller \
+            join producto p on ct.id_producto = p.id_producto \
+            join unidad_medida um on p.cod_unidad_medida = um.cod_unidad_medida \
+            join categ_producto cp on p.cod_categ_producto = cp.cod_categ_producto \
+            join carrera c on a.cod_carrera = c.cod_carrera \
+            join periodo_academ pa on pt.cod_periodo_academ = pa.cod_periodo_academ \
+            where pt.ano_academ = %s and \
+                pt.fecha between %s and %s \
+            order by c.nom_carrera asc, \
+                cp.nom_categ_producto asc, \
+                p.nom_producto asc, \
+                pt.fecha asc, \
+                pt.sigla asc, \
+                pt.seccion asc, \
+                t.semana asc"
+        db = await get_db_connection()
+        if db is None:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error al conectar a la base de datos")
+
+        try:
+            values = (ano_academ, fecha_inicio, fecha_termino)
+            async with db.cursor() as cursor:
+                await cursor.execute(query, values)
+                result = await cursor.fetchall()
+
+        except aiomysql.Error as e:
+            error_message = str(e)
+            if "Connection" in error_message:
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error al conectar a la base de datos")
+            else:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error en la consulta a la base de datos. DBerror {error_message}")
+
+        except Exception as e:
+            error_message = str(e)
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error en la base de datos. DBError {error_message}")
+
+        finally:
+            db.close()
+
+    if perfil.cod_perfil == Const.K_ADMINISTRADOR_CARRERA.value:
+        query = " \
+            select c.nom_carrera, \
+                cp.nom_categ_producto as nom_categ_producto, \
+                p.nom_producto as nom_producto, \
+                ct.cantidad as cantidad, \
+                um.nom_unidad_medida as nom_unidad_medida, \
+                p.precio as precio, \
+                (ct.cantidad * p.precio) as precio_total, \
+                pt.fecha as fecha, \
+                pa.nom_periodo_academ as nom_periodo_academ, \
+                pt.sigla as sigla, \
+                a.nom_asign as nom_asign, \
+                pt.seccion as seccion, \
+                t.semana as semana, \
+                t.titulo_preparacion as titulo_preparacion \
+            from prog_taller pt \
+            join asign a on pt.sigla = a.sigla \
+            join config_taller ct on pt.id_taller = ct.id_taller \
+            join taller t on pt.id_taller = t.id_taller \
+            join producto p on ct.id_producto = p.id_producto \
+            join unidad_medida um on p.cod_unidad_medida = um.cod_unidad_medida \
+            join categ_producto cp on p.cod_categ_producto = cp.cod_categ_producto \
+            join carrera c on a.cod_carrera = c.cod_carrera \
+            join usuario u on a.cod_carrera = u.cod_carrera \
+            join periodo_academ pa on pt.cod_periodo_academ = pa.cod_periodo_academ \
+            where pt.ano_academ = %s and \
+                u.id_usuario = %s and \
+                pt.fecha between %s and %s \
+            order by c.nom_carrera asc, \
+                cp.nom_categ_producto asc, \
+                p.nom_producto asc, \
+                pt.fecha asc, \
+                pt.sigla asc, \
+                pt.seccion asc, \
+                t.semana asc"
+        db = await get_db_connection()
+        if db is None:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error al conectar a la base de datos")
+
+        try:
+            values = (ano_academ, id_usuario, fecha_inicio, fecha_termino)
+            async with db.cursor() as cursor:
+                await cursor.execute(query, values)
+                result = await cursor.fetchall()
+
+        except aiomysql.Error as e:
+            error_message = str(e)
+            if "Connection" in error_message:
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error al conectar a la base de datos")
+            else:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error en la consulta a la base de datos. DBerror {error_message}")
+
+        except Exception as e:
+            error_message = str(e)
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error en la base de datos. DBError {error_message}")
+
+        finally:
+            db.close()
+
+    # Armamos el diccionario de salida
+    for row in result:
+        registro = RegistroDetalleProductoTallerRangoFechas(nom_carrera = row[0],
+                                                            nom_categ_producto = row[1],
+                                                            nom_producto = row[2],
+                                                            cantidad = row[3],
+                                                            nom_unidad_medida = row[4],
+                                                            precio = row[5],
+                                                            precio_total = row[6],
+                                                            fecha = row[7],
+                                                            nom_periodo_academ = row[8],
+                                                            sigla = row[9],
+                                                            nom_asign = row[10],
+                                                            seccion = row[11],
+                                                            semana = row[12],
+                                                            titulo_preparacion = row[13],)
+
         registros.append(registro)
 
     return registros
