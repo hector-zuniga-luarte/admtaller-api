@@ -10,7 +10,7 @@ from models.consultas import RegistroConsultaValorizacionTaller
 from models.consultas import RegistroConsultaPresupuestoEstimadoAsignatura
 from models.consultas import RegistroConsultaAsignacionRegistroTalleresDocente
 from models.consultas import RegistroConsultaResumenProductoRangoFechas
-from models.consultas import RegistroDetalleProductoTallerRangoFechas
+from models.consultas import RegistroConsultaDetalleProductoTallerRangoFechas
 from database import get_db_connection
 from datetime import date
 from infrastructure.constants import Const
@@ -574,10 +574,10 @@ async def consulta_resumen_producto_periodo(ano_academ: int, fecha_inicio: date,
     return registros
 
 
-@router.get("/api/consulta/5/ano_academ/{ano_academ}/fecha_inicio/{fecha_inicio}/fecha_termino/{fecha_termino}/{id_usuario}", response_model=List[RegistroDetalleProductoTallerRangoFechas], summary="Detalle de productos por taller y por rango de fechas", tags=["Consultas"])
+@router.get("/api/consulta/5/ano_academ/{ano_academ}/fecha_inicio/{fecha_inicio}/fecha_termino/{fecha_termino}/{id_usuario}", response_model=List[RegistroConsultaDetalleProductoTallerRangoFechas], summary="Detalle de productos por taller y por rango de fechas", tags=["Consultas"])
 async def consulta_detalle_producto_taller_periodo(ano_academ: int, fecha_inicio: date, fecha_termino: date, id_usuario: int):
-    registro: RegistroDetalleProductoTallerRangoFechas = None
-    registros: List[RegistroDetalleProductoTallerRangoFechas] = []
+    registro: RegistroConsultaDetalleProductoTallerRangoFechas = None
+    registros: List[RegistroConsultaDetalleProductoTallerRangoFechas] = []
 
     # Determinamos el perfil del usuario para determinar qué información puede ver
     perfil = await perfil_usuario(id_usuario)
@@ -708,7 +708,7 @@ async def consulta_detalle_producto_taller_periodo(ano_academ: int, fecha_inicio
 
     # Armamos el diccionario de salida
     for row in result:
-        registro = RegistroDetalleProductoTallerRangoFechas(nom_carrera = row[0],
+        registro = RegistroConsultaDetalleProductoTallerRangoFechas(nom_carrera = row[0],
                                                             nom_categ_producto = row[1],
                                                             nom_producto = row[2],
                                                             cantidad = row[3],

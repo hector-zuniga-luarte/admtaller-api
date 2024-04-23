@@ -49,7 +49,7 @@ class RegistroConsultaResumenProductoRangoFechas(BaseModel):
     precio_total_productos: int
 
 
-class RegistroDetalleProductoTallerRangoFechas(BaseModel):
+class RegistroConsultaDetalleProductoTallerRangoFechas(BaseModel):
     nom_carrera: str
     nom_categ_producto: str
     nom_producto: str
