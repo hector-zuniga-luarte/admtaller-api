@@ -33,7 +33,7 @@ async def asignatura_lista(id_usuario: int):
                 a.nom_asign_abrev as nom_asign_abrev, \
                 a.cod_carrera as cod_carrera, \
                 c.nom_carrera as nom_carrera, \
-				round(sum(round(ct.cantidad * p.precio, 0)), 0) as costo_total \
+                round(sum(round(ct.cantidad * p.precio, 0)), 0) as costo_total \
             from asign a \
             join carrera c on a.cod_carrera = c.cod_carrera \
             join taller t on a.sigla = t.sigla \
@@ -78,7 +78,7 @@ async def asignatura_lista(id_usuario: int):
                 a.nom_asign_abrev as nom_asign_abrev, \
                 a.cod_carrera as cod_carrera, \
                 c.nom_carrera as nom_carrera, \
-				round(sum(round(ct.cantidad * p.precio, 0)), 0) as costo_total \
+                round(sum(round(ct.cantidad * p.precio, 0)), 0) as costo_total \
             from asign a \
             join carrera c on a.cod_carrera = c.cod_carrera \
             join usuario u on c.cod_carrera = u.cod_carrera \
@@ -221,11 +221,11 @@ async def usuario_get(sigla: str, id_usuario: int):
                 a.nom_asign_abrev as nom_asign_abrev, \
                 a.cod_carrera as cod_carrera, \
                 c.nom_carrera as nom_carrera, \
-				round(sum(round(ct.cantidad * p.precio, 0)), 0) as costo_total \
+                round(sum(round(ct.cantidad * p.precio, 0)), 0) as costo_total \
             from asign a \
             join carrera c on a.cod_carrera = c.cod_carrera \
             join taller t on a.sigla = t.sigla \
-			join config_taller ct on t.id_taller = ct.id_taller \
+            join config_taller ct on t.id_taller = ct.id_taller \
 			join producto p on ct.id_producto = p.id_producto \
             where a.sigla = %s \
             group by a.sigla, \
