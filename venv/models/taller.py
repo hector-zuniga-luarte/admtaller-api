@@ -11,4 +11,5 @@ class Taller(BaseModel):
     detalle_preparacion: Optional[str]
     semana: int
     sigla: Optional[str]
-    nom_asignatura: Optional[str]
+    nom_asign: Optional[str]
+    costo_total: int
