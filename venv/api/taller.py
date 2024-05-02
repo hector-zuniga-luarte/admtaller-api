@@ -27,8 +27,8 @@ async def taller_lista(sigla: str):
             round(sum(round(ct.cantidad * p.precio, 0)), 0) as costo_total \
         from taller t \
         join asign a on t.sigla = a.sigla \
-        join config_taller ct on t.id_taller = ct.id_taller \
-        join producto p on ct.id_producto = p.id_producto \
+        left outer join config_taller ct on t.id_taller = ct.id_taller \
+        left outer join producto p on ct.id_producto = p.id_producto \
         where t.sigla = %s \
         group by id_taller, \
             titulo_preparacion, \
@@ -153,8 +153,8 @@ async def taller_get(id_taller: int, id_usuario: int):
 				round(sum(round(ct.cantidad * p.precio, 0)), 0) as costo_total \
             from taller t \
             join asign a on t.sigla = a.sigla \
-			join config_taller ct on t.id_taller = ct.id_taller \
-			join producto p on ct.id_producto = p.id_producto \
+			left outer join config_taller ct on t.id_taller = ct.id_taller \
+			left outer join producto p on ct.id_producto = p.id_producto \
             where t.id_taller = %s \
             group by t.id_taller, \
                 t.titulo_preparacion, \

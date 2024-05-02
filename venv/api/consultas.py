@@ -278,7 +278,7 @@ async def consulta_asignacion_registro_docentes(ano_academ: int, id_usuario: int
         return registros
 
     if perfil.cod_perfil == Const.K_ADMINISTRADOR_TI.value:
-        query = " \
+        query = f" \
             select c.nom_carrera as nom_carrera, \
                 u.primer_apellido as primer_apellido, \
                 u.segundo_apellido as segundo_apellido, \
@@ -310,7 +310,7 @@ async def consulta_asignacion_registro_docentes(ano_academ: int, id_usuario: int
             left outer join periodo_academ pa on pt.cod_periodo_academ = pa.cod_periodo_academ \
             left outer join asign a on pt.sigla = a.sigla \
             where (pt.ano_academ = %s or pt.ano_academ is null) and \
-                u.cod_perfil = 2 \
+                u.cod_perfil = {Const.K_DOCENTE.value} \
             group by c.nom_carrera, \
                 u.primer_apellido, \
                 u.segundo_apellido, \
@@ -351,7 +351,7 @@ async def consulta_asignacion_registro_docentes(ano_academ: int, id_usuario: int
             db.close()
 
     if perfil.cod_perfil == Const.K_ADMINISTRADOR_CARRERA.value:
-        query = " \
+        query = f" \
             select c.nom_carrera as nom_carrera, \
                 u.primer_apellido as primer_apellido, \
                 u.segundo_apellido as segundo_apellido, \
@@ -383,7 +383,7 @@ async def consulta_asignacion_registro_docentes(ano_academ: int, id_usuario: int
             left outer join periodo_academ pa on pt.cod_periodo_academ = pa.cod_periodo_academ \
             left outer join asign a on pt.sigla = a.sigla \
             where (pt.ano_academ = %s or pt.ano_academ is null) and \
-                u.cod_perfil = 2 and \
+                u.cod_perfil = {Const.K_DOCENTE.value} and \
                 u.cod_carrera = (select us.cod_carrera from usuario us where us.id_usuario = %s) \
             group by c.nom_carrera, \
                 u.primer_apellido, \

@@ -12,4 +12,4 @@ class Taller(BaseModel):
     semana: int
     sigla: Optional[str]
     nom_asign: Optional[str]
-    costo_total: int
+    costo_total: Optional[int]

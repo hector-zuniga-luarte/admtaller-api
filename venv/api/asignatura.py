@@ -36,9 +36,9 @@ async def asignatura_lista(id_usuario: int):
                 round(sum(round(ct.cantidad * p.precio, 0)), 0) as costo_total \
             from asign a \
             join carrera c on a.cod_carrera = c.cod_carrera \
-            join taller t on a.sigla = t.sigla \
-            join config_taller ct on t.id_taller = ct.id_taller \
-            join producto p on ct.id_producto = p.id_producto \
+            left outer join taller t on a.sigla = t.sigla \
+            left outer join config_taller ct on t.id_taller = ct.id_taller \
+            left outer join producto p on ct.id_producto = p.id_producto \
             group by a.sigla, \
                 a.nom_asign, \
                 a.nom_asign_abrev, \
@@ -82,10 +82,10 @@ async def asignatura_lista(id_usuario: int):
             from asign a \
             join carrera c on a.cod_carrera = c.cod_carrera \
             join usuario u on c.cod_carrera = u.cod_carrera \
-            join taller t on a.sigla = t.sigla \
-            join config_taller ct on t.id_taller = ct.id_taller \
-            join producto p on ct.id_producto = p.id_producto \
-            where u.id_usuario =  %s \
+            left outer join  taller t on a.sigla = t.sigla \
+            left outer join  config_taller ct on t.id_taller = ct.id_taller \
+            left outer join  producto p on ct.id_producto = p.id_producto \
+            where u.id_usuario = %s \
             group by a.sigla, \
                 a.nom_asign, \
                 a.nom_asign_abrev, \
@@ -224,9 +224,9 @@ async def usuario_get(sigla: str, id_usuario: int):
                 round(sum(round(ct.cantidad * p.precio, 0)), 0) as costo_total \
             from asign a \
             join carrera c on a.cod_carrera = c.cod_carrera \
-            join taller t on a.sigla = t.sigla \
-            join config_taller ct on t.id_taller = ct.id_taller \
-			join producto p on ct.id_producto = p.id_producto \
+            left outer join taller t on a.sigla = t.sigla \
+            left outer join config_taller ct on t.id_taller = ct.id_taller \
+			left outer join producto p on ct.id_producto = p.id_producto \
             where a.sigla = %s \
             group by a.sigla, \
                 a.nom_asign, \

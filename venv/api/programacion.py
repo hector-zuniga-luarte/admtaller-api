@@ -281,7 +281,7 @@ async def programacion_taller_lista(ano_academ: int, cod_periodo_academ: int, si
         from prog_taller pt \
         join periodo_academ pa on pt.cod_periodo_academ = pa.cod_periodo_academ \
         join asign a on pt.sigla = a.sigla \
-        join taller t on pt.id_taller = t.id_taller \
+        left outer join taller t on pt.id_taller = t.id_taller \
         join usuario u on pt.id_usuario = u.id_usuario \
         where pt.ano_academ = %s and \
             pt.cod_periodo_academ = %s and \
