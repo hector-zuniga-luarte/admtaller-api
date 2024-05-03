@@ -356,8 +356,9 @@ async def registro_taller(registro: RegistroTaller) -> RegistroTaller:
                 rt.cod_periodo_academ as cod_periodo_academ, \
                 rt.sigla as sigla, \
                 rt.seccion as seccion, \
-                rt.id_taller as id_taller, \
                 ct.id_producto as id_producto, \
+                rt.id_taller as id_taller, \
+                ct.cod_agrupador as cod_agrupador, \
                 p.precio as precio, \
                 ct.cantidad as cantidad \
             from regis_taller rt \
