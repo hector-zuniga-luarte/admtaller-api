@@ -618,10 +618,10 @@ async def consulta_detalle_producto_taller_periodo(ano_academ: int, fecha_inicio
             order by c.nom_carrera asc, \
                 cp.nom_categ_producto asc, \
                 p.nom_producto asc, \
-                pt.fecha asc, \
                 pt.sigla asc, \
                 pt.seccion asc, \
-                t.semana asc"
+                t.semana asc, \
+                pt.fecha asc"
         db = await get_db_connection()
         if db is None:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error al conectar a la base de datos")
@@ -678,10 +678,10 @@ async def consulta_detalle_producto_taller_periodo(ano_academ: int, fecha_inicio
             order by c.nom_carrera asc, \
                 cp.nom_categ_producto asc, \
                 p.nom_producto asc, \
-                pt.fecha asc, \
                 pt.sigla asc, \
                 pt.seccion asc, \
-                t.semana asc"
+                t.semana asc, \
+                pt.fecha asc"
         db = await get_db_connection()
         if db is None:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error al conectar a la base de datos")
