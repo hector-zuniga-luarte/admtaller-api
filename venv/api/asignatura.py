@@ -125,8 +125,8 @@ async def asignatura_lista(id_usuario: int):
                                 nom_asignatura=row[1],
                                 nom_asignatura_abrev=row[2],
                                 cod_carrera=row[3],
-                                nom_carrera=row[4],
-                                costo_total=row[5],)
+                                nom_carrcoera=row[4],
+                                costo_total=(0 if row[5] is None else row[5]),)
         asignaturas.append(asignatura)
 
     return asignaturas
@@ -246,7 +246,7 @@ async def usuario_get(sigla: str, id_usuario: int):
                                     nom_asignatura_abrev=result[2],
                                     cod_carrera=result[3],
                                     nom_carrera=result[4],
-                                    costo_total=result[5],)
+                                    costo_total=(0 if result[5] is None else result[5]),)
             return asignatura
 
     except aiomysql.Error as e:

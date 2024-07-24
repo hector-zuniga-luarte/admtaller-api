@@ -69,7 +69,7 @@ async def taller_lista(sigla: str):
                         semana=row[3],
                         sigla=row[4],
                         nom_asign = row[5],
-                        costo_total=row[6],)
+                        costo_total=(0 if row[6] is None else row[6]),)
         talleres.append(taller)
 
     return talleres
@@ -176,7 +176,7 @@ async def taller_get(id_taller: int, id_usuario: int):
                             semana=result[3],
                             sigla=result[4],
                             nom_asign=result[5],
-                            costo_total=result[6],)
+                            costo_total=(0 if result[5] is None else result[6]),)
             return taller
 
     except aiomysql.Error as e:

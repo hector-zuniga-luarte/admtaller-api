@@ -11,4 +11,4 @@ class Asignatura(BaseModel):
     nom_asignatura_abrev: Optional[str]
     cod_carrera: int
     nom_carrera: Optional[str]
-    costo_total: Optional[int]
+    costo_total: int
