@@ -125,7 +125,7 @@ async def asignatura_lista(id_usuario: int):
                                 nom_asignatura=row[1],
                                 nom_asignatura_abrev=row[2],
                                 cod_carrera=row[3],
-                                nom_carrcoera=row[4],
+                                nom_carrera=row[4],
                                 costo_total=(0 if row[5] is None else row[5]),)
         asignaturas.append(asignatura)
 
