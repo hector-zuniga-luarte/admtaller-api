@@ -126,6 +126,7 @@ async def taller_get(id_taller: int, id_usuario: int):
         "detalle_preparacion": "",
         "semana": 0,
         "sigla": "",
+        "costo_total": 0,
     }
 
     # Si id_taller = 0 se asume que es un usuario nuevo
