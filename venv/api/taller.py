@@ -177,7 +177,7 @@ async def taller_get(id_taller: int, id_usuario: int):
                             semana=result[3],
                             sigla=result[4],
                             nom_asign=result[5],
-                            costo_total=(0 if result[5] is None else result[6]),)
+                            costo_total=(0 if result[6] is None else result[6]),)
             return taller
 
     except aiomysql.Error as e:
