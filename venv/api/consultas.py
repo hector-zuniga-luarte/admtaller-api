@@ -456,7 +456,7 @@ async def consulta_resumen_producto_periodo(ano_academ: int, fecha_inicio: date,
     if perfil.cod_perfil == Const.K_DOCENTE.value:
         return registros
 
-    if perfil.cod_perfil == Const.K_ADMINISTRADOR_TI.value:
+    if perfil.cod_perfil == Const.K_ADMINISTRADOR_TI.value or perfil.cod_perfil == Const.K_JEFE_BODEGA.value:
         query = " \
             select c.nom_carrera as nom_carrera, \
                 cp.nom_categ_producto as nom_categ_producto, \
@@ -588,7 +588,7 @@ async def consulta_detalle_producto_taller_periodo(ano_academ: int, fecha_inicio
     if perfil.cod_perfil == Const.K_DOCENTE.value:
         return registros
 
-    if perfil.cod_perfil == Const.K_ADMINISTRADOR_TI.value:
+    if perfil.cod_perfil == Const.K_ADMINISTRADOR_TI.value or perfil.cod_perfil == Const.K_JEFE_BODEGA.value:
         query = " \
             select c.nom_carrera, \
                 cp.nom_categ_producto as nom_categ_producto, \

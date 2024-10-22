@@ -26,7 +26,7 @@ async def asignatura_lista(id_usuario: int):
 
     # Dependiendo del perfil, filtramos por carrera o no
     query: str = None
-    if perfil.cod_perfil == Const.K_ADMINISTRADOR_TI.value:
+    if perfil.cod_perfil == Const.K_ADMINISTRADOR_TI.value or perfil.cod_perfil == Const.K_JEFE_BODEGA.value:
         query = " \
             select a.sigla as sigla, \
                 a.nom_asign as nom_asign, \

@@ -77,11 +77,13 @@ async def usuario_lista(id_usuario: int):
                 c.nom_carrera as nom_carrera \
             from usuario u \
             join perfil p on u.cod_perfil = p.cod_perfil \
-            join carrera c on u.cod_carrera = c.cod_carrera \
+            left join carrera c on u.cod_carrera = c.cod_carrera \
             where u.cod_carrera = (select us.cod_carrera \
                                 from usuario us \
-                                where us.id_usuario = %s) \
+                                where us.id_usuario = %s) and \
+                p.cod_perfil <> " + str(Const.K_ADMINISTRADOR_TI.value) + " \
             order by u.cod_carrera asc, \
+                u.cod_perfil asc, \
                 u.primer_apellido asc, \
                 u.segundo_apellido asc, \
                 u.nom_preferido asc"
@@ -101,9 +103,9 @@ async def usuario_lista(id_usuario: int):
                 c.nom_carrera as nom_carrera \
             from usuario u \
             join perfil p on u.cod_perfil = p.cod_perfil \
-            join carrera c on u.cod_carrera = c.cod_carrera \
-            where u.id_usuario <> %s \
+            left join carrera c on u.cod_carrera = c.cod_carrera \
             order by u.cod_carrera asc, \
+                u.cod_perfil asc, \
                 u.primer_apellido asc, \
                 u.segundo_apellido asc, \
                 u.nom_preferido asc"
@@ -113,7 +115,10 @@ async def usuario_lista(id_usuario: int):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error al conectar a la base de datos")
 
     try:
-        values = (id_usuario)
+        if perfil.cod_perfil == Const.K_ADMINISTRADOR_CARRERA.value:
+            values = (id_usuario)
+        if perfil.cod_perfil == Const.K_ADMINISTRADOR_TI.value:
+            values = ()
         async with db.cursor() as cursor:
             await cursor.execute(query, values)
             result = await cursor.fetchall()
@@ -199,7 +204,7 @@ async def usuario_get(id_usuario_get: int, id_usuario: int):
                 c.nom_carrera as nom_carrera \
             from usuario u \
             join perfil p on u.cod_perfil = p.cod_perfil \
-            join carrera c on u.cod_carrera = c.cod_carrera \
+            left join carrera c on u.cod_carrera = c.cod_carrera \
             where id_usuario = %s"
 
         values = (id_usuario_get)
@@ -309,6 +314,10 @@ async def usuario_modificar(usuario: Usuario, id_usuario: int) -> Usuario:
     # Perfil docente no debe ver nada
     if perfil.cod_perfil == Const.K_DOCENTE.value:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Usuario no tiene privilegios para ejecutar la acción")
+    if (usuario.cod_perfil == Const.K_DOCENTE.value or usuario.cod_perfil == Const.K_ADMINISTRADOR_CARRERA.value) and not usuario.cod_carrera:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Los usuarios de perfil docente o administrador de carrera deben tener una carrera definida")
+    if (usuario.cod_perfil == Const.K_ADMINISTRADOR_TI.value or usuario.cod_perfil == Const.K_JEFE_BODEGA.value) and usuario.cod_carrera:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Los usuarios de perfil administrador TI o jefe de bodega no deben tener una carrera definida")
 
     db = await get_db_connection()
     if db is None:

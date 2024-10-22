@@ -36,7 +36,7 @@ async def principal(id_usuario: int):
     if db is None:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error al conectar a la base de datos")
 
-    if perfil.cod_perfil == Const.K_ADMINISTRADOR_TI.value:
+    if perfil.cod_perfil == Const.K_ADMINISTRADOR_TI.value or perfil.cod_perfil == Const.K_JEFE_BODEGA.value:
         query = " \
             select c.nom_carrera as nom_carrera, \
                 'Cantidad de asignaturas' as concepto, \
